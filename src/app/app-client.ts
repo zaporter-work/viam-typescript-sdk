@@ -9,6 +9,7 @@ import {
   PackageType,
   type PackageTypeMap,
 } from '../gen/app/packages/v1/packages_pb';
+import type { FragmentVisibilityMap } from '../gen/app/v1/app_pb';
 
 /**
  * Creates an Authorization object from auth details.
@@ -95,7 +96,7 @@ export class AppClient {
    * @param email The email address of the user
    * @returns The user's ID
    */
-  async getUserIDByEmail(email: string) {
+  async getUserIDByEmail(email: string): Promise<string> {
     const { service } = this;
 
     const req = new pb.GetUserIDByEmailRequest();
@@ -114,7 +115,9 @@ export class AppClient {
    * @param name The name of the new organization
    * @returns The new organization
    */
-  async createOrganization(name: string) {
+  async createOrganization(
+    name: string
+  ): Promise<pb.Organization.AsObject | undefined> {
     const { service } = this;
 
     const req = new pb.CreateOrganizationRequest();
@@ -133,7 +136,7 @@ export class AppClient {
    *
    * @returns The organization list
    */
-  async listOrganizations() {
+  async listOrganizations(): Promise<pb.Organization.AsObject[]> {
     const { service } = this;
     const req = new pb.ListOrganizationsRequest();
 
@@ -150,7 +153,9 @@ export class AppClient {
    * @param locationId The ID of the location to query
    * @returns The list of locations with access to the requested location
    */
-  async getOrganizationsWithAccessToLocation(locationId: string) {
+  async getOrganizationsWithAccessToLocation(
+    locationId: string
+  ): Promise<pb.OrganizationIdentity.AsObject[]> {
     const { service } = this;
     const req = new pb.GetOrganizationsWithAccessToLocationRequest();
     req.setLocationId(locationId);
@@ -168,7 +173,9 @@ export class AppClient {
    * @param userId The ID of the user to query
    * @returns The list of locations the requested user has access to
    */
-  async listOrganizationsByUser(userId: string) {
+  async listOrganizationsByUser(
+    userId: string
+  ): Promise<pb.OrgDetails.AsObject[]> {
     const { service } = this;
     const req = new pb.ListOrganizationsByUserRequest();
     req.setUserId(userId);
@@ -186,7 +193,9 @@ export class AppClient {
    * @param orgId The ID of the organization
    * @returns Details about the organization, if it exists
    */
-  async getOrganization(orgId: string) {
+  async getOrganization(
+    orgId: string
+  ): Promise<pb.Organization.AsObject | undefined> {
     const { service } = this;
     const req = new pb.GetOrganizationRequest();
     req.setOrganizationId(orgId);
@@ -195,7 +204,7 @@ export class AppClient {
       pb.GetOrganizationRequest,
       pb.GetOrganizationResponse
     >(service.getOrganization.bind(service), req);
-    return response.toObject();
+    return response.getOrganization()?.toObject();
   }
 
   /**
@@ -204,7 +213,9 @@ export class AppClient {
    * @param namespace The namespace to query for availability
    * @returns A boolean indicating whether or not the namespace is available
    */
-  async getOrganizationNamespaceAvailability(namespace: string) {
+  async getOrganizationNamespaceAvailability(
+    namespace: string
+  ): Promise<boolean> {
     const { service } = this;
     const req = new pb.GetOrganizationNamespaceAvailabilityRequest();
     req.setPublicNamespace(namespace);
@@ -232,7 +243,7 @@ export class AppClient {
     publicNamespace?: string,
     region?: string,
     cid?: string
-  ) {
+  ): Promise<pb.Organization.AsObject | undefined> {
     const { service } = this;
     const req = new pb.UpdateOrganizationRequest();
     req.setOrganizationId(orgId);
@@ -279,7 +290,9 @@ export class AppClient {
    * @returns An object containing organization members, pending invites, and
    *   org ID
    */
-  async listOrganizationMembers(orgId: string) {
+  async listOrganizationMembers(
+    orgId: string
+  ): Promise<pb.ListOrganizationMembersResponse.AsObject> {
     const { service } = this;
     const req = new pb.ListOrganizationMembersRequest();
     req.setOrganizationId(orgId);
@@ -306,7 +319,7 @@ export class AppClient {
     email: string,
     authorizations: pb.Authorization[],
     sendEmailInvite = true
-  ) {
+  ): Promise<pb.OrganizationInvite.AsObject | undefined> {
     const { service } = this;
     const req = new pb.CreateOrganizationInviteRequest();
     req.setOrganizationId(orgId);
@@ -318,7 +331,7 @@ export class AppClient {
       pb.CreateOrganizationInviteRequest,
       pb.CreateOrganizationInviteResponse
     >(service.createOrganizationInvite.bind(service), req);
-    return response.toObject();
+    return response.getInvite()?.toObject();
   }
 
   /**
@@ -335,7 +348,7 @@ export class AppClient {
     email: string,
     addAuthsList: pb.Authorization[],
     removeAuthsList: pb.Authorization[]
-  ) {
+  ): Promise<pb.OrganizationInvite.AsObject | undefined> {
     const { service } = this;
     const req = new pb.UpdateOrganizationInviteAuthorizationsRequest();
     req.setOrganizationId(orgId);
@@ -347,7 +360,7 @@ export class AppClient {
       pb.UpdateOrganizationInviteAuthorizationsRequest,
       pb.UpdateOrganizationInviteAuthorizationsResponse
     >(service.updateOrganizationInviteAuthorizations.bind(service), req);
-    return response.toObject();
+    return response.getInvite()?.toObject();
   }
 
   /**
@@ -393,7 +406,10 @@ export class AppClient {
    * @param email The email associated with the invite to resend
    * @returns The invite
    */
-  async resendOrganizationInvite(orgId: string, email: string) {
+  async resendOrganizationInvite(
+    orgId: string,
+    email: string
+  ): Promise<pb.OrganizationInvite.AsObject | undefined> {
     const { service } = this;
     const req = new pb.ResendOrganizationInviteRequest();
     req.setOrganizationId(orgId);
@@ -403,7 +419,7 @@ export class AppClient {
       pb.ResendOrganizationInviteRequest,
       pb.ResendOrganizationInviteResponse
     >(service.resendOrganizationInvite.bind(service), req);
-    return response.toObject();
+    return response.getInvite()?.toObject();
   }
 
   /**
@@ -415,7 +431,11 @@ export class AppClient {
    *   new location under
    * @returns The location object
    */
-  async createLocation(orgId: string, name: string, parentLocationId?: string) {
+  async createLocation(
+    orgId: string,
+    name: string,
+    parentLocationId?: string
+  ): Promise<pb.Location.AsObject | undefined> {
     const { service } = this;
     const req = new pb.CreateLocationRequest();
     req.setOrganizationId(orgId);
@@ -428,7 +448,7 @@ export class AppClient {
       pb.CreateLocationRequest,
       pb.CreateLocationResponse
     >(service.createLocation.bind(service), req);
-    return response.toObject();
+    return response.getLocation()?.toObject();
   }
 
   /**
@@ -437,7 +457,7 @@ export class AppClient {
    * @param locId The ID of the location to query.
    * @returns The location object
    */
-  async getLocation(locId: string) {
+  async getLocation(locId: string): Promise<pb.Location.AsObject | undefined> {
     const { service } = this;
     const req = new pb.GetLocationRequest();
     req.setLocationId(locId);
@@ -446,7 +466,7 @@ export class AppClient {
       pb.GetLocationRequest,
       pb.GetLocationResponse
     >(service.getLocation.bind(service), req);
-    return response.toObject();
+    return response.getLocation()?.toObject();
   }
 
   /**
@@ -464,7 +484,7 @@ export class AppClient {
     name?: string,
     parentLocId?: string,
     region?: string
-  ) {
+  ): Promise<pb.Location.AsObject | undefined> {
     const { service } = this;
     const req = new pb.UpdateLocationRequest();
     req.setLocationId(locId);
@@ -482,7 +502,7 @@ export class AppClient {
       pb.UpdateLocationRequest,
       pb.UpdateLocationResponse
     >(service.updateLocation.bind(service), req);
-    return response.toObject();
+    return response.getLocation()?.toObject();
   }
 
   /**
@@ -507,7 +527,7 @@ export class AppClient {
    * @param orgId The ID of the organization to query
    * @returns A list of locations under the organization
    */
-  async listLocations(orgId: string) {
+  async listLocations(orgId: string): Promise<pb.Location.AsObject[]> {
     const { service } = this;
     const req = new pb.ListLocationsRequest();
     req.setOrganizationId(orgId);
@@ -561,7 +581,9 @@ export class AppClient {
    * @param locId The ID of the location to retrieve `LocationAuth` from.
    * @returns The `LocationAuth` for the requested location.
    */
-  async locationAuth(locId: string) {
+  async locationAuth(
+    locId: string
+  ): Promise<pb.LocationAuth.AsObject | undefined> {
     const { service } = this;
     const req = new pb.LocationAuthRequest();
     req.setLocationId(locId);
@@ -570,7 +592,7 @@ export class AppClient {
       pb.LocationAuthRequest,
       pb.LocationAuthResponse
     >(service.locationAuth.bind(service), req);
-    return response.toObject();
+    return response.toObject().auth;
   }
 
   /**
@@ -579,7 +601,9 @@ export class AppClient {
    * @param locId The ID of the location to create a `LocationAuth` for
    * @returns The newly created `LocationAuth`
    */
-  async createLocationSecret(locId: string) {
+  async createLocationSecret(
+    locId: string
+  ): Promise<pb.LocationAuth.AsObject | undefined> {
     const { service } = this;
     const req = new pb.CreateLocationSecretRequest();
     req.setLocationId(locId);
@@ -588,7 +612,7 @@ export class AppClient {
       pb.CreateLocationSecretRequest,
       pb.CreateLocationSecretResponse
     >(service.createLocationSecret.bind(service), req);
-    return response.toObject();
+    return response.toObject().auth;
   }
 
   /**
@@ -615,7 +639,7 @@ export class AppClient {
    * @param id The ID of the robot
    * @returns The `Robot` object
    */
-  async getRobot(id: string) {
+  async getRobot(id: string): Promise<pb.Robot.AsObject | undefined> {
     const { service } = this;
     const req = new pb.GetRobotRequest();
     req.setId(id);
@@ -624,7 +648,7 @@ export class AppClient {
       service.getRobot.bind(service),
       req
     );
-    return response.toObject();
+    return response.toObject().robot;
   }
 
   /**
@@ -633,7 +657,9 @@ export class AppClient {
    * @param orgId The ID of the organization to query
    * @returns The list of `RoverRentalRobot` objects
    */
-  async getRoverRentalRobots(orgId: string) {
+  async getRoverRentalRobots(
+    orgId: string
+  ): Promise<pb.RoverRentalRobot.AsObject[]> {
     const { service } = this;
     const req = new pb.GetRoverRentalRobotsRequest();
     req.setOrgId(orgId);
@@ -651,7 +677,7 @@ export class AppClient {
    * @param robotId The ID of the robot to query
    * @returns The list of `RobotPart` objects associated with the robot
    */
-  async getRobotParts(robotId: string) {
+  async getRobotParts(robotId: string): Promise<pb.RobotPart.AsObject[]> {
     const { service } = this;
     const req = new pb.GetRobotPartsRequest();
     req.setRobotId(robotId);
@@ -669,7 +695,7 @@ export class AppClient {
    * @param id The ID of the requested robot part
    * @returns The robot part and a its json config
    */
-  async getRobotPart(id: string) {
+  async getRobotPart(id: string): Promise<pb.GetRobotPartResponse.AsObject> {
     const { service } = this;
     const req = new pb.GetRobotPartRequest();
     req.setId(id);
@@ -699,7 +725,7 @@ export class AppClient {
     filter?: string,
     levels?: string[],
     pageToken = ''
-  ) {
+  ): Promise<pb.GetRobotPartLogsResponse.AsObject> {
     const { service } = this;
     const req = new pb.GetRobotPartLogsRequest();
     req.setId(id);
@@ -783,7 +809,9 @@ export class AppClient {
    * @param id The ID of the requested robot part
    * @returns The list of the robot part's history
    */
-  async getRobotPartHistory(id: string) {
+  async getRobotPartHistory(
+    id: string
+  ): Promise<pb.RobotPartHistoryEntry.AsObject[]> {
     const { service } = this;
     const req = new pb.GetRobotPartHistoryRequest();
     req.setId(id);
@@ -803,7 +831,11 @@ export class AppClient {
    * @param robotConfig The new config for the robot part
    * @returns The updated robot part
    */
-  async updateRobotPart(id: string, name: string, robotConfig: StructType) {
+  async updateRobotPart(
+    id: string,
+    name: string,
+    robotConfig: StructType
+  ): Promise<pb.RobotPart.AsObject | undefined> {
     const { service } = this;
     const req = new pb.UpdateRobotPartRequest();
     req.setId(id);
@@ -814,7 +846,7 @@ export class AppClient {
       pb.UpdateRobotPartRequest,
       pb.UpdateRobotPartResponse
     >(service.updateRobotPart.bind(service), req);
-    return response.toObject();
+    return response.toObject().part;
   }
 
   /**
@@ -824,7 +856,7 @@ export class AppClient {
    * @param partName The name for the new robot part
    * @returns The ID of the newly-created robot part
    */
-  async newRobotPart(robotId: string, partName: string) {
+  async newRobotPart(robotId: string, partName: string): Promise<string> {
     const { service } = this;
     const req = new pb.NewRobotPartRequest();
     req.setRobotId(robotId);
@@ -859,7 +891,9 @@ export class AppClient {
    * @param robotId The ID of the robot to get API keys for
    * @returns A list of the robot's API keys
    */
-  async getRobotAPIKeys(robotId: string) {
+  async getRobotAPIKeys(
+    robotId: string
+  ): Promise<pb.APIKeyWithAuthorizations.AsObject[]> {
     const { service } = this;
     const req = new pb.GetRobotAPIKeysRequest();
     req.setRobotId(robotId);
@@ -909,7 +943,9 @@ export class AppClient {
    * @param partId The ID of the part to create a secret for
    * @returns The robot part object
    */
-  async createRobotPartSecret(partId: string) {
+  async createRobotPartSecret(
+    partId: string
+  ): Promise<pb.RobotPart.AsObject | undefined> {
     const { service } = this;
     const req = new pb.CreateRobotPartSecretRequest();
     req.setPartId(partId);
@@ -918,7 +954,7 @@ export class AppClient {
       pb.CreateRobotPartSecretRequest,
       pb.CreateRobotPartSecretResponse
     >(service.createRobotPartSecret.bind(service), req);
-    return response.toObject();
+    return response.toObject().part;
   }
 
   /**
@@ -945,7 +981,7 @@ export class AppClient {
    * @param locId The ID of the location to list robots for
    * @returns The list of robot objects
    */
-  async listRobots(locId: string) {
+  async listRobots(locId: string): Promise<pb.Robot.AsObject[]> {
     const { service } = this;
     const req = new pb.ListRobotsRequest();
     req.setLocationId(locId);
@@ -964,7 +1000,7 @@ export class AppClient {
    * @param name The name of the new robot
    * @returns The new robot's ID
    */
-  async newRobot(locId: string, name: string) {
+  async newRobot(locId: string, name: string): Promise<string> {
     const { service } = this;
     const req = new pb.NewRobotRequest();
     req.setName(name);
@@ -985,7 +1021,11 @@ export class AppClient {
    * @param name The name to update the robot to
    * @returns The newly-modified robot object
    */
-  async updateRobot(robotId: string, locId: string, name: string) {
+  async updateRobot(
+    robotId: string,
+    locId: string,
+    name: string
+  ): Promise<pb.Robot.AsObject | undefined> {
     const { service } = this;
     const req = new pb.UpdateRobotRequest();
     req.setId(robotId);
@@ -996,7 +1036,7 @@ export class AppClient {
       pb.UpdateRobotRequest,
       pb.UpdateRobotResponse
     >(service.updateRobot.bind(service), req);
-    return response.toObject();
+    return response.toObject().robot;
   }
 
   /**
@@ -1019,15 +1059,26 @@ export class AppClient {
    * Lists all fragments within an organization.
    *
    * @param orgId The ID of the organization to list fragments for
-   * @param publicOnly Optional boolean, if true then only public fragments will
-   *   be listed. Defaults to true.
+   * @param publicOnly Optional, deprecated boolean. Use fragmentVisibilities
+   *   instead. If true then only public fragments will be listed. Defaults to
+   *   true
+   * @param fragmentVisibilities Optional list of fragment visibilities to
+   *   include in returned list. An empty fragmentVisibilities list defaults to
+   *   normal publicOnly behavior (discludes unlisted public fragments)
+   *   Otherwise, fragment visibilities should contain one of the three
+   *   visibilities and takes precendence over the publicOnly field
    * @returns The list of fragment objects
    */
-  async listFragments(orgId: string, publicOnly = true) {
+  async listFragments(
+    orgId: string,
+    publicOnly = true,
+    fragmentVisibilities: FragmentVisibilityMap[keyof FragmentVisibilityMap][] = []
+  ): Promise<pb.Fragment.AsObject[]> {
     const { service } = this;
     const req = new pb.ListFragmentsRequest();
     req.setOrganizationId(orgId);
     req.setShowPublic(publicOnly);
+    req.setFragmentVisibilityList(fragmentVisibilities);
 
     const response = await promisify<
       pb.ListFragmentsRequest,
@@ -1042,7 +1093,7 @@ export class AppClient {
    * @param id The ID of the fragment to look up
    * @returns The requested fragment
    */
-  async getFragment(id: string) {
+  async getFragment(id: string): Promise<pb.Fragment.AsObject | undefined> {
     const { service } = this;
     const req = new pb.GetFragmentRequest();
     req.setId(id);
@@ -1051,7 +1102,7 @@ export class AppClient {
       pb.GetFragmentRequest,
       pb.GetFragmentResponse
     >(service.getFragment.bind(service), req);
-    return response.toObject();
+    return response.toObject().fragment;
   }
 
   /**
@@ -1062,7 +1113,11 @@ export class AppClient {
    * @param config The new fragment's config
    * @returns The newly created fragment
    */
-  async createFragment(orgId: string, name: string, config: StructType) {
+  async createFragment(
+    orgId: string,
+    name: string,
+    config: StructType
+  ): Promise<pb.Fragment.AsObject | undefined> {
     const { service } = this;
     const req = new pb.CreateFragmentRequest();
     req.setOrganizationId(orgId);
@@ -1073,7 +1128,7 @@ export class AppClient {
       pb.CreateFragmentRequest,
       pb.CreateFragmentResponse
     >(service.createFragment.bind(service), req);
-    return response.toObject();
+    return response.toObject().fragment;
   }
 
   /**
@@ -1082,17 +1137,23 @@ export class AppClient {
    * @param id The ID of the fragment to update
    * @param name The name to update the fragment to
    * @param config The config to update the fragment to
-   * @param makePublic Optional boolean specifying whether the fragment should
-   *   be public or not. If not passed the visibility will be unchanged.
-   *   Fragments are private by default when created
+   * @param makePublic Optional, deprecated boolean specifying whether the
+   *   fragment should be public or not. If not passed, the visibility will be
+   *   unchanged. Fragments are private by default when created
+   * @param visibility Optional FragmentVisibility specifying the updated
+   *   fragment visibility. If not passed, the visibility will be unchanged. If
+   *   visibility is not set and makePublic is set, makePublic takes effect. If
+   *   makePublic and visibility are set, they must not be conflicting. If
+   *   neither is set, the fragment visibility will remain unchanged.
    * @returns The updated fragment
    */
   async updateFragment(
     id: string,
     name: string,
     config: StructType,
-    makePublic?: boolean
-  ) {
+    makePublic?: boolean,
+    visibility?: keyof pb.FragmentVisibilityMap
+  ): Promise<pb.Fragment.AsObject | undefined> {
     const { service } = this;
     const req = new pb.UpdateFragmentRequest();
     req.setId(id);
@@ -1101,12 +1162,15 @@ export class AppClient {
     if (makePublic !== undefined) {
       req.setPublic(makePublic);
     }
+    if (visibility !== undefined) {
+      req.setVisibility(pb.FragmentVisibility[visibility]);
+    }
 
     const response = await promisify<
       pb.UpdateFragmentRequest,
       pb.UpdateFragmentResponse
     >(service.updateFragment.bind(service), req);
-    return response.toObject();
+    return response.toObject().fragment;
   }
 
   /**
@@ -1219,8 +1283,12 @@ export class AppClient {
    * @param orgId The ID of the organization to list authorizations for
    * @param resourceIds Optional list of IDs of resources to list authorizations
    *   for. If not provided, all resources will be included
+   * @returns The list of authorizations
    */
-  async listAuthorizations(orgId: string, resourceIds?: string[]) {
+  async listAuthorizations(
+    orgId: string,
+    resourceIds?: string[]
+  ): Promise<pb.Authorization.AsObject[]> {
     const { service } = this;
     const req = new pb.ListAuthorizationsRequest();
     req.setOrganizationId(orgId);
@@ -1241,7 +1309,9 @@ export class AppClient {
    * @param permissions A list of permissions to check
    * @returns A filtered list of the authorized permissions
    */
-  async checkPermissions(permissions: pb.AuthorizedPermissions[]) {
+  async checkPermissions(
+    permissions: pb.AuthorizedPermissions[]
+  ): Promise<pb.AuthorizedPermissions.AsObject[]> {
     const { service } = this;
     const req = new pb.CheckPermissionsRequest();
     req.setPermissionsList(permissions);
@@ -1259,7 +1329,9 @@ export class AppClient {
    * @param itemId The ID of the item to get
    * @returns The requested item
    */
-  async getRegistryItem(itemId: string) {
+  async getRegistryItem(
+    itemId: string
+  ): Promise<pb.RegistryItem.AsObject | undefined> {
     const { service } = this;
     const req = new pb.GetRegistryItemRequest();
     req.setItemId(itemId);
@@ -1268,7 +1340,7 @@ export class AppClient {
       pb.GetRegistryItemRequest,
       pb.GetRegistryItemResponse
     >(service.getRegistryItem.bind(service), req);
-    return response.toObject();
+    return response.toObject().item;
   }
 
   /**
@@ -1346,7 +1418,7 @@ export class AppClient {
     statuses: (keyof pb.RegistryItemStatusMap)[],
     searchTerm?: string,
     pageToken?: string
-  ) {
+  ): Promise<pb.RegistryItem.AsObject[]> {
     const { service } = this;
     const req = new pb.ListRegistryItemsRequest();
     req.setOrganizationId(orgId);
@@ -1403,7 +1475,10 @@ export class AppClient {
    * @param name The name of the module
    * @returns The module ID and a URL to its detail page
    */
-  async createModule(orgId: string, name: string) {
+  async createModule(
+    orgId: string,
+    name: string
+  ): Promise<pb.CreateModuleResponse.AsObject> {
     const { service } = this;
     const req = new pb.CreateModuleRequest();
     req.setOrganizationId(orgId);
@@ -1434,7 +1509,7 @@ export class AppClient {
     description: string,
     models: pb.Model[],
     entrypoint: string
-  ) {
+  ): Promise<string> {
     const { service } = this;
     const req = new pb.UpdateModuleRequest();
     req.setModuleId(moduleId);
@@ -1457,7 +1532,7 @@ export class AppClient {
    * @param moduleId The ID of the module
    * @returns The requested module
    */
-  async getModule(moduleId: string) {
+  async getModule(moduleId: string): Promise<pb.Module.AsObject | undefined> {
     const { service } = this;
     const req = new pb.GetModuleRequest();
     req.setModuleId(moduleId);
@@ -1466,7 +1541,7 @@ export class AppClient {
       service.getModule.bind(service),
       req
     );
-    return response.toObject();
+    return response.toObject().module;
   }
 
   /**
@@ -1475,7 +1550,7 @@ export class AppClient {
    * @param orgId The ID of the organization to query
    * @returns The organization's modules
    */
-  async listModules(orgId: string) {
+  async listModules(orgId: string): Promise<pb.Module.AsObject[]> {
     const { service } = this;
     const req = new pb.ListModulesRequest();
     req.setOrganizationId(orgId);
@@ -1495,7 +1570,10 @@ export class AppClient {
    *   present timestamp
    * @returns The new key and ID
    */
-  async createKey(authorizations: pb.Authorization[], name?: string) {
+  async createKey(
+    authorizations: pb.Authorization[],
+    name?: string
+  ): Promise<pb.CreateKeyResponse.AsObject> {
     const { service } = this;
     const req = new pb.CreateKeyRequest();
     req.setAuthorizationsList(authorizations);
@@ -1531,7 +1609,9 @@ export class AppClient {
    * @param orgId The ID of the organization to query
    * @returns The list of API keys
    */
-  async listKeys(orgId: string) {
+  async listKeys(
+    orgId: string
+  ): Promise<pb.APIKeyWithAuthorizations.AsObject[]> {
     const { service } = this;
     const req = new pb.ListKeysRequest();
     req.setOrgId(orgId);
@@ -1549,7 +1629,7 @@ export class AppClient {
    * @param id The ID of the key to rotate
    * @returns The updated key and ID
    */
-  async rotateKey(id: string) {
+  async rotateKey(id: string): Promise<pb.RotateKeyResponse.AsObject> {
     const { service } = this;
     const req = new pb.RotateKeyRequest();
     req.setId(id);
@@ -1567,7 +1647,9 @@ export class AppClient {
    * @param id The ID of the key to duplicate
    * @returns The new key and ID
    */
-  async createKeyFromExistingKeyAuthorizations(id: string) {
+  async createKeyFromExistingKeyAuthorizations(
+    id: string
+  ): Promise<pb.CreateKeyFromExistingKeyAuthorizationsResponse.AsObject> {
     const { service } = this;
     const req = new pb.CreateKeyFromExistingKeyAuthorizationsRequest();
     req.setId(id);
